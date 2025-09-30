@@ -1,5 +1,5 @@
 import {
-  FowV4BfForceMetadata,
+  ForceMetadata,
   FowV4BfFormation,
   FowV4BfUnitOption,
 } from '../types';
@@ -9,7 +9,7 @@ import { extractPoints } from '../utils/extractPoints';
 import { extractSourceId } from '../utils/extractSourceId';
 
 export function build(data: string[][]) {
-  const metadata: Partial<FowV4BfForceMetadata> = {};
+  const metadata: Partial<ForceMetadata> = {};
   const formations: FowV4BfFormation[] = [];
   
   let formationIndex: number = -1;
