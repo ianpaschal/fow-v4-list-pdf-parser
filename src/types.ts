@@ -5,6 +5,8 @@ export interface ForceMetadata {
   Book: string; // e.g. "Leviathans"
   UnitCount: number;
   DynamicPoints: boolean;
+  _createdBy?: string;
+  _createdAt?: string;
 }
 
 export interface ForceData extends ForceMetadata {
@@ -25,10 +27,10 @@ export interface Formation {
 export interface Unit {
   UnitID: number;
   UnitName: string; // 'Veteran M4 Easy Eight Tank Company HQ',
-  UnitCardID: string; // 'LU611',
+  UnitCardID: string | null; // 'LU611',
   UnitPoints: number;
   UnitNationality: string; // 'U.S.',
-  UnitAdditionalCards: string; // jeep unit card ID for eg
+  UnitAdditionalCards?: string; // jeep unit card ID for eg
   Options: UnitOption[];
 }
 
