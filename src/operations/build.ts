@@ -1,5 +1,3 @@
-import { forceDiagrams } from '@ianpaschal/combat-command-static-data/flamesOfWarV4';
-
 import {
   FowV4BfForceMetadata,
   FowV4BfFormation,
@@ -17,6 +15,8 @@ export function build(data: string[][]) {
   let formationIndex: number = -1;
   let unitIndex: number = -1;
 
+  let firstFormationLineIndex: number = 0;
+
   // Walk through the file contents, line by line:
   for (let i = 0; i < data.length; i++) {
     const line = data[i];
@@ -24,17 +24,6 @@ export function build(data: string[][]) {
     const cardId = extractSourceId(line);
     const nationality = extractNationality(line);
     const points = extractPoints(line);
-
-    // Extract force diagram and title (optional):
-    if (i < 2 && line.length === 1) {
-      const diagram = Object.values(forceDiagrams).find((r) => r.displayName === line[0]);
-      if (diagram) {
-        metadata.Title = diagram.displayName;
-      } else {
-        metadata.SubTitle = line[0];
-      }
-      continue;
-    }
 
     // End the process if we've reached the bottom of the list data:
     if (checkIsEndOfList(line)) {
@@ -58,6 +47,9 @@ export function build(data: string[][]) {
         FormationPoints: points,
         Units: [],
       });
+      if (!firstFormationLineIndex) {
+        firstFormationLineIndex = i;
+      }
     }
 
     // Is unit:
@@ -81,6 +73,15 @@ export function build(data: string[][]) {
         OptionText: line[0],
       });
     }
+  }
+
+  // Extract title:
+  if (firstFormationLineIndex === 2) {
+    metadata.SubTitle = data[0][0];
+    metadata.Title = data[1][0];
+  } else {
+    metadata.SubTitle = '';
+    metadata.Title = data[0][0];
   }
 
   // Combine main options:

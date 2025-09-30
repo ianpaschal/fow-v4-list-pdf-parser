@@ -16,7 +16,6 @@
   "license": "ISC",
   "description": "A TypeScript project for parsing FOW v4 lists",
   "dependencies": {
-    "@ianpaschal/combat-command-static-data": "^3.21.1",
     "pdf-parse": "^1.1.1",
     "pdf2pic": "^2.1.4",
     "pdfjs-dist": "^5.4.149"
