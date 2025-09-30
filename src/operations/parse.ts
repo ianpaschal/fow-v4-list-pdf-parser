@@ -1,44 +1,36 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { dirname, join } from 'path';
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
-// Configure PDF.js worker
-import { fileURLToPath } from 'url';
+import { PDFDocumentProxy } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api';
 
-import { sortTextItems } from '../sortTextItems';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-pdfjsLib.GlobalWorkerOptions.workerSrc = join(__dirname, '../node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs');
+function isTextItem(item: TextItem | TextMarkedContent): item is TextItem {
+  return 'str' in item && 'transform' in item;
+}
 
 /**
  * 
- * @param filePath 
- * @returns 
+ * @param pdf - PDF.js document proxy
+ * @returns - Array of string arrays representing lines down and across the page
  */
-export async function parse(filePath: string): Promise<string[][]> {
-  try {
-    // Check if file exists:
-    if (!fs.existsSync(filePath)) {
-      throw new Error(`File not found: ${filePath}`);
-    }
+export async function parse(pdf: PDFDocumentProxy): Promise<string[][]> {
+  const page = await pdf.getPage(1); // Starts at 1, not 0
+  const content = await page.getTextContent();
 
-    // Check if file is a PDF:
-    const ext = path.extname(filePath).toLowerCase();
-    if (ext !== '.pdf') {
-      throw new Error(`File must be a PDF: ${filePath}`);
+  // Sort items by Y position, then X position:
+  const sortedItems = Object.values(content.items.reduce((acc, item) => {
+    if (isTextItem(item) && item.str.trim().length > 0) {
+      if (!acc[item.transform[5]]) {
+        acc[item.transform[5]] = [];
+      }
+      acc[item.transform[5]] = [
+        ...acc[item.transform[5]],
+        item,
+      ].sort((a, b) => (
+        a.transform[4] - b.transform[4]
+      ));
     }
-
-    // Read PDF file:
-    const dataBuffer = fs.readFileSync(filePath);
-    
-    // Convert Buffer to Uint8Array for PDF.js:
-    const uint8Array = new Uint8Array(dataBuffer);
-    
-    // Load & parse PDF document:
-    const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
-    const pdf = await loadingTask.promise;
-    return await sortTextItems(pdf);
-  } catch (error) {
-    throw new Error(`Failed to parse PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
+    return acc;
+  }, {} as Record<number, TextItem[]>)).sort((a, b) => (
+    b[0].transform[5] - a[0].transform[5]
+  ));
+  
+  return sortedItems.map((line) => line.map((item) => item.str));
 }
